@@ -1,7 +1,7 @@
 #!/bin/bash
 
+DS=$1
 WM="trustmark"
-DS="coco_"
 SZ="full"
 
 AUGS=(
@@ -32,8 +32,8 @@ AUGS=(
 for AUG in "${AUGS[@]}"; do
     python create_queries.py \
     --aug-type $AUG \
-    --data-dir "./out/${DS}${WM}_polar_${SZ}/images" \
-    --out-dir "./out/${DS}${WM}_polar_${SZ}/queries/queries_${AUG}" \
+    --data-dir "./out/${DS}_${WM}_polar_${SZ}/images" \
+    --out-dir "./out/${DS}_${WM}_polar_${SZ}/queries/queries_${AUG}" \
     --n-query 1000 
 done
 

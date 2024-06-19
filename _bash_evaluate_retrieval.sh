@@ -1,8 +1,8 @@
 #!/bin/bash
 
-MODEL="clip-openai"
+DS=$1
+MODEL="dinov2"
 WM="trustmark"
-DS="coco_"
 SZ="full"
 K=1
 
@@ -32,11 +32,11 @@ AUGS=(
 for AUG in "${AUGS[@]}"; do
     python evaluate_retrieval.py \
     --model "$MODEL" \
-    --query-dir "./out/${DS}${WM}_polar_${SZ}/queries/queries_${AUG}" \
-    --emb-path "./out/${DS}${WM}_polar_${SZ}/${MODEL}_embeddings.pkl" \
-    --cluster-info-path ./out/${DS}${WM}_polar_${SZ}/cluster_info.pkl \
+    --query-dir "./out/${DS}_${WM}_polar_${SZ}/queries/queries_${AUG}" \
+    --emb-path "./out/${DS}_${WM}_polar_${SZ}/${MODEL}_embeddings.pkl" \
+    --cluster-info-path ./out/${DS}_${WM}_polar_${SZ}/cluster_info.pkl \
     --wm-th 1.0 \
-    --log-path "./out/${DS}${WM}_polar_${SZ}/result_${MODEL}_${K}_scdecoder_1.0.log" \
+    --log-path "./out/${DS}_${WM}_polar_${SZ}/result_${MODEL}_${K}_scdecoder_1.0.log" \
     --wm-method ${WM} \
     --top-k ${K}
 done

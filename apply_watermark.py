@@ -6,7 +6,6 @@ from torchvision import transforms
 from PIL import Image
 from time import time
 import torch
-from concurrent.futures import ProcessPoolExecutor
 from torchvision.utils import save_image
 
 from utils.utils import CustomImageFolder, WatermarkDataset, CustomDataLoader
@@ -14,8 +13,8 @@ from utils.utils import CustomImageFolder, WatermarkDataset, CustomDataLoader
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument("--wm-method", default="stegaStamp", type=str,
-        choices=["stegaStamp", "new_wm", "trustmark"])
+    parser.add_argument("--wm-method", default="trustmark", type=str,
+        choices=["trustmark"]) # choices=["stegaStamp", "trustmark"]) # StegaStamp currently unavailable
     parser.add_argument("--data-dir", type=str, required=True)
     parser.add_argument("--n-bits", default=100, type=int)
     parser.add_argument("--n-clusters", type=int)
@@ -34,19 +33,6 @@ def main():
             [
                 transforms.Resize(256),
                 transforms.CenterCrop(256),
-                # transforms.Resize(256),
-                # transforms.ToTensor(),
-            ]
-        )
-    elif args.wm_method == "new_wm":
-        from utils.new_wm import NewWMWatermark
-        wm_method = NewWMWatermark(wm_bits=args.n_bits)
-        transform = transforms.Compose(
-            [
-                transforms.Resize(256),
-                transforms.CenterCrop(256),
-                # transforms.Resize(256),
-                transforms.ToTensor(),
             ]
         )
     elif args.wm_method == "trustmark":
@@ -56,8 +42,6 @@ def main():
             [
                 transforms.Resize(256),
                 transforms.CenterCrop(256),
-                # transforms.Resize(256),
-                # transforms.ToTensor(),
             ]
         )
     else:
@@ -110,10 +94,7 @@ def main():
             wm_images = wm_method.watermark_batch_images(images, keys)
 
             for wm_image, img_id in zip(wm_images, img_ids):
-                if args.wm_method == "stegaStamp" or args.wm_method == "trustmark":
-                    wm_image.save(os.path.join(output_image_dir, f"{img_id}.png"))
-                elif args.wm_method == "new_wm":
-                    save_image(wm_image, os.path.join(output_image_dir, f"{img_id}.png"))
+                wm_image.save(os.path.join(output_image_dir, f"{img_id}.png"))
 
     print(f"Watermarking finished!")
 

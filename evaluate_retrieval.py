@@ -54,8 +54,8 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("--model", default="clip-openai", type=str,
         choices=["clip-openai", "dinov2"])
-    parser.add_argument("--wm-method", default="stegaStamp", type=str,
-        choices=["stegaStamp", "new_wm", "trustmark"])
+    parser.add_argument("--wm-method", default="trustmark", type=str,
+        choices=["trustmark"]) # choices=["stegaStamp", "trustmark"])  # StegaStamp currently unavailable
     parser.add_argument("--query-dir", type=str, required=True)
     parser.add_argument("--emb-path", type=str, required=True)
     parser.add_argument("--cluster-info-path", type=str, required=True)
@@ -98,9 +98,6 @@ def main():
     if args.wm_method == "stegaStamp":
         from utils.stega_stamp import StegaStampWatermark
         wm_method = StegaStampWatermark()
-    elif args.wm_method == "new_wm":
-        from utils.new_wm import NewWMWatermark
-        wm_method = NewWMWatermark(img_res=256, wm_bits=128)
     elif args.wm_method == "trustmark":
         from utils.trustmark import Trustmark
         wm_method = Trustmark(wm_bits=100)
@@ -143,14 +140,7 @@ def main():
 
         for query_image, _, query_img_id in tqdm(query_dataset, total=len(query_dataset)):
             query_emb = model_fn(query_image).cpu().numpy()
-
-            if args.wm_method == "stegaStamp" or args.wm_method == "trustmark":
-                key = wm_method.decode_single_image(query_image)
-            elif args.wm_method == "new_wm":
-                transform = transforms.Compose([
-                    transforms.ToTensor(),
-                ])
-                key = wm_method.decode_single_image(transform(query_image).to(device))
+            key = wm_method.decode_single_image(query_image)
 
             if N == 100:
                 key_64 = key[:64]
@@ -267,7 +257,6 @@ def main():
             accuracy += (query_img_id in max_sim_ids) / len(query_dataset)
     
     log_file.write("Naive Accuracy: {:.4f}\n".format(accuracy))
-    # print("No. Embedding Similarity Checks: {:n}".format(emb_sim_cnt))
     log_file.write("----------------------------------\n")
     log_file.write("\n\n")
 

@@ -12,7 +12,7 @@ import numpy as np
 import math
 from tqdm import tqdm
 
-from python_polar_coding.polar_codes import FastSSCPolarCodec
+from python_polar_coding.polar_codes import SCPolarCodec
 
 from DiffPure.guided_diffusion.script_util import create_model_and_diffusion, model_and_diffusion_defaults
 
@@ -83,7 +83,7 @@ class WatermarkDataset:
         random.seed(0)
         codes = {}
         # Assign random binary codes to the clusters
-        # if mode == "random": #TODO WRONG
+        # if mode == "random": #TODO FIX
         #     for i in range(n_clusters):
         #         code = ""
         #         for j in range(n_bits):
@@ -96,7 +96,7 @@ class WatermarkDataset:
             N = n_bits
             K = int(math.log2(n_clusters))
 
-            codec = FastSSCPolarCodec(N=N, K=K, design_snr=0.0)
+            codec = SCPolarCodec(N=N, K=K, design_snr=0.0)
 
             for i in tqdm(range(n_clusters)):
                 # convert i to binary message with length log(n_clusters)
@@ -122,8 +122,8 @@ class WatermarkDataset:
             K_64 = math.ceil(K * 2 / 3)
             K_32 = K - K_64
 
-            codec_64 = FastSSCPolarCodec(N=64, K=K_64, design_snr=0.0)
-            codec_32 = FastSSCPolarCodec(N=32, K=K_32, design_snr=0.0)
+            codec_64 = SCPolarCodec(N=64, K=K_64, design_snr=0.0)
+            codec_32 = SCPolarCodec(N=32, K=K_32, design_snr=0.0)
 
             for i in tqdm(range(n_clusters)):
                 # convert i to binary message with length log(n_clusters)
@@ -275,7 +275,6 @@ def dict2namespace(config):
 class GuidedDiffusion(torch.nn.Module):
     def __init__(self, config, t, device=None, model_dir='pretrained/guided_diffusion'):
         super().__init__()
-        # self.args = args
         self.config = config
         if device is None:
             device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -286,7 +285,6 @@ class GuidedDiffusion(torch.nn.Module):
         # load model
         model_config = model_and_diffusion_defaults()
         model_config.update(vars(self.config.model))
-        # print(f'model_config: {model_config}')
         model, diffusion = create_model_and_diffusion(**model_config)
         model.load_state_dict(torch.load(f'{model_dir}/256x256_diffusion_uncond.pt', map_location='cpu'))
         model.requires_grad_(False).eval().to(self.device)
@@ -303,17 +301,10 @@ class GuidedDiffusion(torch.nn.Module):
             assert isinstance(img, torch.Tensor)
             batch_size = img.shape[0]
 
-            # if tag is None:
-            #     tag = 'rnd' + str(random.randint(0, 10000))
-            # out_dir = os.path.join(self.args.log_dir, 'bs' + str(bs_id) + '_' + tag)
 
             assert img.ndim == 4, img.ndim
             img = img.to(self.device)
             x0 = img
-
-            # if bs_id < 2:
-            #     os.makedirs(out_dir, exist_ok=True)
-            #     tvu.save_image((x0 + 1) * 0.5, os.path.join(out_dir, f'original_input.png'))
 
             xs = []
             xts = []
@@ -325,8 +316,6 @@ class GuidedDiffusion(torch.nn.Module):
 
                 xts.append(x.clone())
 
-                # if bs_id < 2:
-                #     tvu.save_image((x + 1) * 0.5, os.path.join(out_dir, f'init_{it}.png'))
 
                 for i in reversed(range(total_noise_levels)):
                     t = torch.tensor([i] * batch_size, device=self.device)
@@ -337,15 +326,7 @@ class GuidedDiffusion(torch.nn.Module):
                                                 cond_fn=None,
                                                 model_kwargs=None)["sample"]
 
-                    # added intermediate step vis
-                    # if (i - 99) % 100 == 0 and bs_id < 2:
-                    #     tvu.save_image((x + 1) * 0.5, os.path.join(out_dir, f'noise_t_{i}_{it}.png'))
-
                 x0 = x
-
-                # if bs_id < 2:
-                #     torch.save(x0, os.path.join(out_dir, f'samples_{it}.pth'))
-                #     tvu.save_image((x0 + 1) * 0.5, os.path.join(out_dir, f'samples_{it}.png'))
 
                 xs.append(x0)
 
