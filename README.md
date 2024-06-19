@@ -38,3 +38,16 @@ There are some other parameters of the method that can be changed in the bash sc
 
 
 We note that some parts of the current code are not GPU optimized and they might be updated in the future.
+
+
+
+## Citation
+
+```bibtex
+@article{saberi2024drew,
+  title={DREW: Towards Robust Data Provenance by Leveraging Error-Controlled Watermarking},
+  author={Saberi, Mehrdad and Sadasivan, Vinu Sankar and Zarei, Arman and Mahdavifar, Hessam and Feizi, Soheil},
+  journal={arXiv preprint arXiv:2406.02836},
+  year={2024}
+}
+```
